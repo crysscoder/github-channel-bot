@@ -10,6 +10,8 @@ const escapeHtml = (value: string) => {
 
 const repoUrl = (repoName: string) => `https://github.com/${repoName}`;
 
+const pluginName = (repoName: string) => repoName.split("/").at(-1) || repoName;
+
 const branchName = (ref: string) => ref.replace("refs/heads/", "");
 
 const shortSha = (sha: string) => sha.slice(0, 7);
@@ -79,12 +81,12 @@ const formatRelease = (event: GitHubEvent) => {
   }
 
   const title = release.name || release.tag_name;
+  const repo = event.repo.name;
 
   return [
-    `\u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043b\u0438\u0437 \u0432 <a href="${repoUrl(event.repo.name)}">${escapeHtml(event.repo.name)}</a>`,
+    `\u0423\u0440\u0430! \u0421\u0435\u0433\u043e\u0434\u043d\u044f \u0432\u044b\u0448\u0435\u043b \u0440\u0435\u043b\u0438\u0437 <a href="${release.html_url}">${escapeHtml(release.tag_name)}</a> \u0434\u043b\u044f \u043f\u043b\u0430\u0433\u0438\u043d\u0430 <a href="${repoUrl(repo)}">${escapeHtml(pluginName(repo))}</a>.`,
     "",
-    `\u0412\u0435\u0440\u0441\u0438\u044f: <a href="${release.html_url}">${escapeHtml(release.tag_name)}</a>`,
-    `\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435: ${escapeHtml(title)}`
+    `\u041a\u0440\u0430\u0442\u043a\u043e\u0435 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435: ${escapeHtml(title)}`
   ].join("\n");
 };
 
@@ -117,15 +119,14 @@ export const formatEvent = (event: GitHubEvent) => {
 };
 
 export const formatRepository = (repo: GitHubRepository) => {
-  const lines = [
-    `\u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439`,
-    "",
-    `<a href="${repo.html_url}">${escapeHtml(repo.full_name)}</a>`
-  ];
+  const name = pluginName(repo.full_name);
+  const description = repo.description || "\u043d\u043e\u0432\u044b\u0439 Paper-\u043f\u043b\u0430\u0433\u0438\u043d";
 
-  if (repo.description) {
-    lines.push(escapeHtml(repo.description));
-  }
+  const lines = [
+    `\u0423\u0440\u0430! \u0421\u0435\u0433\u043e\u0434\u043d\u044f \u0431\u044b\u043b \u0432\u044b\u043b\u043e\u0436\u0435\u043d \u043f\u043b\u0430\u0433\u0438\u043d <a href="${repo.html_url}">${escapeHtml(name)}</a>.`,
+    "",
+    `\u041a\u0440\u0430\u0442\u043a\u043e\u0435 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435: ${escapeHtml(description)}`
+  ];
 
   return lines.join("\n");
 };

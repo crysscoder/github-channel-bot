@@ -30,14 +30,18 @@ const tick = async () => {
 
     for (const event of fresh) {
       const text = formatEvent(event);
-      seen.add(event.id);
 
       if (!text) {
+        seen.add(event.id);
+        await saveState(config.stateFile, { seenIds: Array.from(seen) });
         continue;
       }
 
       const { sendTelegramMessage } = await import("./telegram");
       await sendTelegramMessage(config, text);
+      seen.add(event.id);
+      await saveState(config.stateFile, { seenIds: Array.from(seen) });
+      console.log(`Sent ${event.type} ${event.repo.name} ${event.id}`);
       await sleep(700);
     }
 

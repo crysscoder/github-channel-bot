@@ -42,14 +42,14 @@ const formatPush = (event: GitHubEvent) => {
   });
 
   if (hidden > 0) {
-    lines.push(`- и ещё ${hidden}`);
+    lines.push(`- \u0438 \u0435\u0449\u0451 ${hidden}`);
   }
 
   return [
-    `Новый push в <a href="${repoUrl(repo)}">${escapeHtml(repo)}</a>`,
+    `\u041d\u043e\u0432\u044b\u0439 push \u0432 <a href="${repoUrl(repo)}">${escapeHtml(repo)}</a>`,
     "",
-    `Ветка: <code>${escapeHtml(branchName(event.payload.ref))}</code>`,
-    `Коммитов: ${event.payload.commits.length}`,
+    `\u0412\u0435\u0442\u043a\u0430: <code>${escapeHtml(branchName(event.payload.ref))}</code>`,
+    `\u041a\u043e\u043c\u043c\u0438\u0442\u043e\u0432: ${event.payload.commits.length}`,
     ...lines
   ].join("\n");
 };
@@ -68,10 +68,10 @@ const formatRelease = (event: GitHubEvent) => {
   const title = release.name || release.tag_name;
 
   return [
-    `Новый релиз в <a href="${repoUrl(event.repo.name)}">${escapeHtml(event.repo.name)}</a>`,
+    `\u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043b\u0438\u0437 \u0432 <a href="${repoUrl(event.repo.name)}">${escapeHtml(event.repo.name)}</a>`,
     "",
-    `Версия: <a href="${release.html_url}">${escapeHtml(release.tag_name)}</a>`,
-    `Название: ${escapeHtml(title)}`
+    `\u0412\u0435\u0440\u0441\u0438\u044f: <a href="${release.html_url}">${escapeHtml(release.tag_name)}</a>`,
+    `\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435: ${escapeHtml(title)}`
   ].join("\n");
 };
 
@@ -81,7 +81,7 @@ const formatCreate = (event: GitHubEvent) => {
   }
 
   return [
-    `Новый репозиторий`,
+    `\u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439`,
     "",
     `<a href="${repoUrl(event.repo.name)}">${escapeHtml(event.repo.name)}</a>`
   ].join("\n");

@@ -1,6 +1,6 @@
 import { config } from "./config";
-import { formatEvent } from "./format";
-import { fetchEvents } from "./github";
+import { formatEvent, formatRepository } from "./format";
+import { fetchEvents, fetchRepositories } from "./github";
 import { loadState, saveState } from "./state";
 
 let running = false;
@@ -17,15 +17,54 @@ const tick = async () => {
   try {
     const state = await loadState(config.stateFile);
     const seen = new Set(state.seenIds);
+    const seenRepos = new Set(state.seenRepos ?? []);
     const events = await fetchEvents(config);
+    const repos = await fetchRepositories(config);
     const fresh = events
       .filter((event) => !seen.has(event.id))
       .reverse();
+    const save = async () => {
+      await saveState(config.stateFile, {
+        seenIds: Array.from(seen),
+        seenRepos: Array.from(seenRepos)
+      });
+    };
 
     if (state.seenIds.length === 0 && config.startupMode === "mark_seen") {
-      await saveState(config.stateFile, { seenIds: events.map((event) => event.id) });
-      console.log(`Marked ${events.length} events as seen`);
+      for (const event of events) {
+        seen.add(event.id);
+      }
+
+      for (const repo of repos) {
+        seenRepos.add(repo.full_name);
+      }
+
+      await save();
+      console.log(`Marked ${events.length} events and ${repos.length} repos as seen`);
       return;
+    }
+
+    const { sendTelegramMessage } = await import("./telegram");
+
+    if (!state.seenRepos && config.startupMode === "mark_seen") {
+      for (const repo of repos) {
+        seenRepos.add(repo.full_name);
+      }
+
+      await save();
+      console.log(`Marked ${repos.length} repos as seen`);
+    } else {
+      const freshRepos = repos
+        .filter((repo) => !seenRepos.has(repo.full_name))
+        .reverse();
+
+      for (const repo of freshRepos) {
+        await sendTelegramMessage(config, formatRepository(repo));
+        seenRepos.add(repo.full_name);
+        await save();
+        console.log(`Sent Repository ${repo.full_name}`);
+        await sleep(700);
+      }
     }
 
     for (const event of fresh) {
@@ -33,19 +72,18 @@ const tick = async () => {
 
       if (!text) {
         seen.add(event.id);
-        await saveState(config.stateFile, { seenIds: Array.from(seen) });
+        await save();
         continue;
       }
 
-      const { sendTelegramMessage } = await import("./telegram");
       await sendTelegramMessage(config, text);
       seen.add(event.id);
-      await saveState(config.stateFile, { seenIds: Array.from(seen) });
+      await save();
       console.log(`Sent ${event.type} ${event.repo.name} ${event.id}`);
       await sleep(700);
     }
 
-    await saveState(config.stateFile, { seenIds: Array.from(seen) });
+    await save();
   } finally {
     running = false;
   }

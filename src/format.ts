@@ -1,4 +1,4 @@
-import type { GitHubCreatePayload, GitHubEvent, GitHubPushPayload, GitHubReleasePayload } from "./types";
+import type { GitHubCreatePayload, GitHubEvent, GitHubPushPayload, GitHubReleasePayload, GitHubRepository } from "./types";
 
 const escapeHtml = (value: string) => {
   return value
@@ -17,7 +17,8 @@ const shortSha = (sha: string) => sha.slice(0, 7);
 const firstLine = (message: string) => message.split("\n")[0]?.trim() || "commit";
 
 const isPushPayload = (payload: GitHubEvent["payload"]): payload is GitHubPushPayload => {
-  return Array.isArray((payload as GitHubPushPayload).commits);
+  const push = payload as GitHubPushPayload;
+  return typeof push.ref === "string" && (Array.isArray(push.commits) || typeof push.head === "string");
 };
 
 const isReleasePayload = (payload: GitHubEvent["payload"]): payload is GitHubReleasePayload => {
@@ -29,27 +30,39 @@ const isCreatePayload = (payload: GitHubEvent["payload"]): payload is GitHubCrea
 };
 
 const formatPush = (event: GitHubEvent) => {
-  if (!isPushPayload(event.payload) || event.payload.commits.length === 0) {
+  if (!isPushPayload(event.payload)) {
     return null;
   }
 
   const repo = event.repo.name;
-  const commits = event.payload.commits.slice(0, 5);
-  const hidden = event.payload.commits.length - commits.length;
+  const sourceCommits = Array.isArray(event.payload.commits) ? event.payload.commits : [];
+  const commits = sourceCommits.slice(0, 5);
+  const hidden = sourceCommits.length - commits.length;
   const lines = commits.map((commit) => {
     const url = `https://github.com/${repo}/commit/${commit.sha}`;
     return `- <a href="${url}">${shortSha(commit.sha)}</a> ${escapeHtml(firstLine(commit.message))}`;
   });
 
+  if (lines.length === 0 && event.payload.head) {
+    const url = `https://github.com/${repo}/commit/${event.payload.head}`;
+    lines.push(`- <a href="${url}">${shortSha(event.payload.head)}</a> commit`);
+  }
+
+  if (lines.length === 0) {
+    return null;
+  }
+
   if (hidden > 0) {
     lines.push(`- \u0438 \u0435\u0449\u0451 ${hidden}`);
   }
+
+  const count = typeof event.payload.size === "number" && event.payload.size > 0 ? event.payload.size : sourceCommits.length || 1;
 
   return [
     `\u041d\u043e\u0432\u044b\u0439 push \u0432 <a href="${repoUrl(repo)}">${escapeHtml(repo)}</a>`,
     "",
     `\u0412\u0435\u0442\u043a\u0430: <code>${escapeHtml(branchName(event.payload.ref))}</code>`,
-    `\u041a\u043e\u043c\u043c\u0438\u0442\u043e\u0432: ${event.payload.commits.length}`,
+    `\u041a\u043e\u043c\u043c\u0438\u0442\u043e\u0432: ${count}`,
     ...lines
   ].join("\n");
 };
@@ -101,4 +114,18 @@ export const formatEvent = (event: GitHubEvent) => {
   }
 
   return null;
+};
+
+export const formatRepository = (repo: GitHubRepository) => {
+  const lines = [
+    `\u041d\u043e\u0432\u044b\u0439 \u0440\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439`,
+    "",
+    `<a href="${repo.html_url}">${escapeHtml(repo.full_name)}</a>`
+  ];
+
+  if (repo.description) {
+    lines.push(escapeHtml(repo.description));
+  }
+
+  return lines.join("\n");
 };

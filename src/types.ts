@@ -21,10 +21,18 @@ export type GitHubRelease = {
   prerelease: boolean;
 };
 
+export type GitHubRepository = {
+  full_name: string;
+  html_url: string;
+  description: string | null;
+};
+
 export type GitHubPushPayload = {
   ref: string;
-  commits: GitHubCommit[];
-  size: number;
+  commits?: GitHubCommit[];
+  size?: number;
+  head?: string;
+  before?: string;
 };
 
 export type GitHubReleasePayload = {
@@ -48,4 +56,5 @@ export type GitHubEvent = {
 
 export type StoredState = {
   seenIds: string[];
+  seenRepos?: string[];
 };

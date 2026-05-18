@@ -1,0 +1,14 @@
+{
+  "name": "github-channel-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "check": "bun run --bun tsc --noEmit"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.8.3"
+  }
+}

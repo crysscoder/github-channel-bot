@@ -1,27 +1,36 @@
+<div align="center">
+
 # GitHub Channel Bot
 
-Бот для Telegram-канала. Следит за публичной активностью GitHub и публикует новые push, release и создание репозиториев.
+![Release](https://img.shields.io/github/v/release/crysscoder/github-channel-bot?style=flat-square&label=release)
+![Bun](https://img.shields.io/badge/Bun-runtime-000000?style=flat-square&logo=bun&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?style=flat-square&logo=telegram&logoColor=white)
+![Issues](https://img.shields.io/github/issues/crysscoder/github-channel-bot?style=flat-square)
 
-## Что нужно
+Telegram-бот для публикации GitHub-активности в канал.
 
-- Bun
-- Telegram-бот от BotFather
-- бот добавлен в канал как админ
-- канал указан как `@channel_username` или `-100...`
+[Release](https://github.com/crysscoder/github-channel-bot/releases/latest) · [Issues](https://github.com/crysscoder/github-channel-bot/issues) · [CodeAdapter](https://codeadapter.ru)
+
+</div>
+
+## Что делает
+
+- публикует новые push
+- публикует новые release
+- публикует создание новых репозиториев
+- работает через GitHub public events
+- хранит уже обработанные события в `state.json`
 
 ## Настройка
 
-```powershell
-copy .env.example .env
-```
-
-Заполни `.env`:
+Создай `.env`:
 
 ```env
 GITHUB_USER=crysscoder
 GITHUB_TOKEN=
-TELEGRAM_BOT_TOKEN=token_from_botfather
-TELEGRAM_CHAT_ID=@channel_username
+TELEGRAM_BOT_TOKEN=token
+TELEGRAM_CHAT_ID=-1000000000000
 POLL_INTERVAL_SECONDS=60
 STARTUP_MODE=mark_seen
 STATE_FILE=state.json
@@ -29,8 +38,8 @@ DRY_RUN=false
 RUN_ONCE=false
 ```
 
-`STARTUP_MODE=mark_seen` при первом запуске не публикует старые события.  
-`STARTUP_MODE=publish_recent` опубликует свежие события из GitHub API.
+`STARTUP_MODE=mark_seen` при первом запуске просто запоминает старые события.  
+`STARTUP_MODE=publish_recent` отправит свежие события из GitHub API.
 
 ## Запуск
 
@@ -39,7 +48,7 @@ bun install
 bun run start
 ```
 
-## Проверка без отправки в канал
+## Проверка без отправки
 
 ```powershell
 $env:DRY_RUN="true"; $env:RUN_ONCE="true"; $env:STARTUP_MODE="publish_recent"; bun run start
